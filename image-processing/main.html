@@ -1,0 +1,490 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Super-Resolution of Single Multi-Color Image with Guided Filter</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-04-27"><meta name="DC.source" content="main.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Super-Resolution of Single Multi-Color Image with Guided Filter</h1><!--introduction--><p>By: Abdallah Arar</p><p>Link to research paper: <a href="https://www.sciencedirect.com/science/article/pii/S1047320318303195">https://www.sciencedirect.com/science/article/pii/S1047320318303195</a></p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Problem Formulation</a></li><li><a href="#2">Proposed Solution</a></li><li><a href="#3">Data Source</a></li><li><a href="#4">Solution</a></li><li><a href="#13">Visualization of Results</a></li><li><a href="#14">Analysis and Conclusions</a></li></ul></div><h2>Problem Formulation<a name="1"></a></h2><p>Super-resolution algorithms and techniques for monochrome images are being developed rapidly but such for multi-color images are still being explored.</p><p>Simply upscaling the chromatic channels of the image using interpolation leads to degradation in image quality, which may have an effect on other algorithms that depend on super-resolution.</p><h2>Proposed Solution<a name="2"></a></h2><p>This solution attempts to alleviate degradation in image quality by using a super-resolution algorithm on the luminance channel and then using it as a guide image for guided filtering of the upscaled chromatic channels. As seen in the block diagram below, the image is represented in the <img src="main_eq06086481283795342624.png" alt="$Y C_b C_r$"> color space, and the chromatic channels, <img src="main_eq08210524232183454578.png" alt="$C_b$"> and <img src="main_eq11733326652296403545.png" alt="$C_r$">, are scaled up using bicubic interpolation and the luminance channel, <img src="main_eq07649107795707013777.png" alt="$Y$">, is scaled up using some super-resolution algorithm. Both upscaled chromatic channels are then filtered using a guided filter with the upscaled <img src="main_eq07649107795707013777.png" alt="$Y$"> as the guide, and then the said filtered chromatic components along with the upscaled <img src="main_eq07649107795707013777.png" alt="$Y$"> are then converted back into an RGB image.</p><p><img vspace="5" hspace="5" src="block_diagram.jpg" alt=""> </p><h2>Data Source<a name="3"></a></h2><p>For the purposes of illustrating the solution, the standard image of Lena named <tt>lena_std.tif</tt> obtained from <a href="http://www.lenna.org/">http://www.lenna.org/</a> will be used.</p><pre class="codeinput">imshow(<span class="string">'lena_std.tif'</span>)
+</pre><img vspace="5" hspace="5" src="main_01.png" alt=""> <h2>Solution<a name="4"></a></h2><p>Parameter set-up</p><pre class="codeinput">image = <span class="string">'lena_std.tif'</span>;
+factor = 2;
+r = 2;
+e = 0.01;
+</pre><p>Import images(s) and normalize them to be in the range of [0,1]</p><pre class="codeinput">ref = imread(image);
+ref = double(ref)/256;
+</pre><p>Downscale the reference image to be used as the input</p><pre class="codeinput">A = imresize(ref, 1 / factor, <span class="string">'bicubic'</span>);
+</pre><p>Convert the input image from RGB to YCbCr color space</p><pre class="codeinput">R = A(:, :, 1); G = A(:, :, 2); B = A(:, :, 3);
+Y = 0.299 * R + 0.587 * G + 0.114 * B;
+C_b = 0.564 * (B - Y);
+C_r = 0.713 * (R - Y);
+
+subplot(1, 3, 1); imshow(Y); title(<span class="string">'Y'</span>);
+subplot(1, 3, 2); imshow(C_b); title(<span class="string">'C_b'</span>);
+subplot(1, 3, 3); imshow(C_r); title(<span class="string">'C_r'</span>);
+</pre><img vspace="5" hspace="5" src="main_02.png" alt=""> <p>Upscale the chromatic components using bicubic interpolation</p><pre class="codeinput">s1 = size(ref); s2 = size(A);
+factor = s1(1)/s2(1);
+C_bbc = imresize(C_b, factor, <span class="string">'bicubic'</span>);
+C_rbc = imresize(C_r, factor, <span class="string">'bicubic'</span>);
+
+subplot(1, 2, 1); imshow(C_bbc); title(<span class="string">'Bi-cubic interpolated C_b'</span>);
+subplot(1, 2, 2); imshow(C_rbc); title(<span class="string">'Bi-cubic interpolated C_r'</span>);
+</pre><img vspace="5" hspace="5" src="main_03.png" alt=""> <p>Use a super-resolution technique to upscale the luminance component</p><pre class="codeinput">Y_sr = imresize(Y, factor, <span class="string">'bicubic'</span>);
+
+subplot(1, 1, 1); imshowpair(Y, Y_sr, <span class="string">'montage'</span>);
+title(<span class="string">'Y before and after super-resolution'</span>);
+</pre><img vspace="5" hspace="5" src="main_04.png" alt=""> <p>Filter the chromatic components using a guided filter with <tt>Y_sr</tt> as the guide</p><pre class="codeinput">Y_o = Y_sr;
+C_bo = imguidedfilter(C_bbc, Y_sr, <span class="string">'NeighborhoodSize'</span>, r, <span class="keyword">...</span>
+    <span class="string">'DegreeOfSmoothing'</span>, e);
+C_ro = imguidedfilter(C_rbc, Y_sr, <span class="string">'NeighborhoodSize'</span>, r, <span class="keyword">...</span>
+    <span class="string">'DegreeOfSmoothing'</span>, e);
+
+subplot(2, 2, 1); imshow(C_bbc); title(<span class="string">'C_b before guided filtering'</span>);
+subplot(2, 2, 2); imshow(C_rbc); title(<span class="string">'C_r before guided filtering'</span>);
+subplot(2, 2, 3); imshow(C_bo); title(<span class="string">'C_b after guided filtering'</span>);
+subplot(2, 2, 4); imshow(C_ro); title(<span class="string">'C_r after guided filtering'</span>);
+</pre><img vspace="5" hspace="5" src="main_05.png" alt=""> <p>Convert the output from YCbCr to RGB color space</p><pre class="codeinput">s = size(Y_o);
+A_o = zeros(s(1), s(2), 3);
+
+A_o(:, :, 1) = Y_o + 1.302 * C_ro;
+A_o(:, :, 2) = Y_o - 0.344 * C_bo - 0.712 * C_ro;
+A_o(:, :, 3) = Y_o + 1.772 * C_bo;
+</pre><h2>Visualization of Results<a name="13"></a></h2><p>Display the downsampled input and super-resolutioned output images</p><pre class="codeinput">subplot(1,1,1); imshowpair(A, A_o, <span class="string">'montage'</span>)
+</pre><img vspace="5" hspace="5" src="main_06.png" alt=""> <h2>Analysis and Conclusions<a name="14"></a></h2><p>The solution has been modified to allow for easier analysis by making it into a function which accepts the parameters as the input and PSQR and RMSE as the output and can be found in <tt>tuneSolution.m</tt></p><p>To avoid unneeded complexity, only bi-cubic interpolation will be used as the super-resolution technique for the guided image</p><p>Effect of image on peak signal-to-noise ratio and root-mean-square error</p><pre class="codeinput">images = {<span class="string">'lena_std.tif'</span>, <span class="string">'beeflowr.ppm'</span>, <span class="string">'blakeyed.ppm'</span>};
+n = length(images);
+PSNRs = zeros(1, n);
+PSNRIs = zeros(1, n); PSNRCbs = zeros(1, n); PSNRCrs = zeros(1, n);
+RMSEIs = zeros(1, n); RMSECbs = zeros(1, n); RMSECrs = zeros(1, n);
+<span class="keyword">for</span> i=1:n
+    [PSNRs(i), PSNRIs(i), PSNRCrs(i), PSNRCbs(i), RMSEIs(i), RMSECbs(i),<span class="keyword">...</span>
+        RMSECrs(i)] = tuneSolution(images{i}, 3, 2, 0.01);
+<span class="keyword">end</span>
+
+subplot(2,2,1); bar(PSNRCbs); title(<span class="string">'PSNR of C_b for each image'</span>);
+ylabel(<span class="string">'Peak signal-to-noise ratio'</span>); set(gca,<span class="string">'xticklabel'</span>,images)
+subplot(2,2,2); bar(PSNRCrs); title(<span class="string">'PSNR of C_r for each image'</span>);
+ylabel(<span class="string">'Peak signal-to-noise ratio'</span>); set(gca,<span class="string">'xticklabel'</span>,images)
+subplot(2,2,3); bar(RMSECbs); title(<span class="string">'RMSE of C_b for each image'</span>);
+ylabel(<span class="string">'Root-mean-square error'</span>); set(gca,<span class="string">'xticklabel'</span>,images)
+subplot(2,2,4); bar(RMSECrs); title(<span class="string">'RMSE of C_r for each image'</span>);
+ylabel(<span class="string">'Root-mean-square error'</span>); set(gca,<span class="string">'xticklabel'</span>,images)
+</pre><img vspace="5" hspace="5" src="main_07.png" alt=""> <p>Varying the image does not seem to affect PSNR by much relative to the value of the respective PSNRs, but it seems to result in a greater relative effect on the RMSE.</p><p>Effect of factor on root-mean-square error</p><pre class="codeinput">factors = 1:10;
+n = length(factors);
+PSNRs = zeros(1, n);
+PSNRIs = zeros(1, n); PSNRCbs = zeros(1, n); PSNRCrs = zeros(1, n);
+RMSEIs = zeros(1, n); RMSECbs = zeros(1, n); RMSECrs = zeros(1, n);
+<span class="keyword">for</span> i=1:n
+    [PSNRs(i), PSNRIs(i), PSNRCrs(i), PSNRCbs(i), RMSEIs(i), RMSECbs(i),<span class="keyword">...</span>
+        RMSECrs(i)] = tuneSolution(<span class="string">'blakeyed.ppm'</span>, factors(i), 2, 0.01);
+<span class="keyword">end</span>
+
+subplot(1,3,1); plot(factors,RMSEIs); title(<span class="string">'RMSE of I vs factor'</span>);
+xlabel(<span class="string">'Magnification factor'</span>); ylabel(<span class="string">'Root-mean-square error'</span>);
+subplot(1,3,2); plot(factors,RMSECbs); title(<span class="string">'RMSE of output C_b vs factor'</span>);
+xlabel(<span class="string">'Magnification factor'</span>); ylabel(<span class="string">'Root-mean-square error'</span>);
+subplot(1,3,3); plot(factors,RMSECrs); title(<span class="string">'RMSE of output C_r vs factor'</span>);
+xlabel(<span class="string">'Magnification factor'</span>); ylabel(<span class="string">'Root-mean-square error'</span>);
+</pre><img vspace="5" hspace="5" src="main_08.png" alt=""> <p>The increase of factor leads to the general increase of root-mean-square error, with the exception of powers of 2 which seem to be omitted by the author of the paper. By plotting only odd numbers we obtain the following.</p><pre class="codeinput">factors = 1:2:25;
+n = length(factors);
+PSNRs = zeros(1, n);
+PSNRIs = zeros(1, n); PSNRCbs = zeros(1, n); PSNRCrs = zeros(1, n);
+RMSEIs = zeros(1, n); RMSECbs = zeros(1, n); RMSECrs = zeros(1, n);
+<span class="keyword">for</span> i=1:n
+    [PSNRs(i), PSNRIs(i), PSNRCrs(i), PSNRCbs(i), RMSEIs(i), RMSECbs(i),<span class="keyword">...</span>
+        RMSECrs(i)] = tuneSolution(images{2}, factors(i), 2, 0.01);
+<span class="keyword">end</span>
+
+subplot(1,3,1); plot(factors,RMSEIs); title(<span class="string">'RMSE of I vs factor'</span>);
+xlabel(<span class="string">'Magnification factor'</span>); ylabel(<span class="string">'Root-mean-square error'</span>);
+subplot(1,3,2); plot(factors,RMSECbs); title(<span class="string">'RMSE of output C_b vs factor'</span>);
+xlabel(<span class="string">'Magnification factor'</span>); ylabel(<span class="string">'Root-mean-square error'</span>);
+subplot(1,3,3); plot(factors,RMSECrs); title(<span class="string">'RMSE of output C_r vs factor'</span>);
+xlabel(<span class="string">'Magnification factor'</span>); ylabel(<span class="string">'Root-mean-square error'</span>);
+</pre><img vspace="5" hspace="5" src="main_09.png" alt=""> <p>It appears to show a near linear increase in RMSE with an offset at certain values such as 9 and 19</p><p>Effect of the regularization parameter <img src="main_eq04202927574850129020.png" alt="$\epsilon$"></p><pre class="codeinput">es = linspace(0.01,1,100);
+n = length(es);
+PSNRs = zeros(1, n);
+PSNRIs = zeros(1, n); PSNRCbs = zeros(1, n); PSNRCrs = zeros(1, n);
+RMSEIs = zeros(1, n); RMSECbs = zeros(1, n); RMSECrs = zeros(1, n);
+<span class="keyword">for</span> i=1:n
+    [PSNRs(i), PSNRIs(i), PSNRCrs(i), PSNRCbs(i), RMSEIs(i), RMSECbs(i),<span class="keyword">...</span>
+        RMSECrs(i)] = tuneSolution(<span class="string">'blakeyed.ppm'</span>, 3, 2, es(i));
+<span class="keyword">end</span>
+
+subplot(1,2,1); plot(es,PSNRCbs); title(<span class="string">'PSNR of output C_b vs \epsilon'</span>);
+xlabel(<span class="string">'Regularization parameter\epsilon'</span>); ylabel(<span class="string">'Peak signal-to-noise ratio'</span>);
+subplot(1,2,2); plot(es,PSNRCrs); title(<span class="string">'PSNR of output C_r vs \epsilon'</span>);
+xlabel(<span class="string">'Regularization parameter\epsilon'</span>); ylabel(<span class="string">'Peak signal-to-noise ratio'</span>);
+</pre><img vspace="5" hspace="5" src="main_10.png" alt=""> <p>Like the paper, the magnification factor is fixed to 3, the window size is fixed to 3 and the image used is Blakeyed; the only deviation from the paper is guided image. Bi-cubic interpolation is used instead of the result of Zeyde et al. As seen in the plots above, the PSNR of the output Cb and Cr components decreases as regularization increases, which is similar to the results of the paper, but unlike the paper which shows a linear decrease, the plots above show a pattern more akin to the inverse function.</p><p>Effect of window size r</p><pre class="codeinput">rs = 1:20;
+n = length(rs);
+PSNRs = zeros(1, n);
+PSNRIs = zeros(1, n); PSNRCbs = zeros(1, n); PSNRCrs = zeros(1, n);
+RMSEIs = zeros(1, n); RMSECbs = zeros(1, n); RMSECrs = zeros(1, n);
+<span class="keyword">for</span> i=1:n
+    [PSNRs(i), PSNRIs(i), PSNRCrs(i), PSNRCbs(i), RMSEIs(i), RMSECbs(i),<span class="keyword">...</span>
+        RMSECrs(i)] = tuneSolution(<span class="string">'blakeyed.ppm'</span>, 3, rs(i), 0.5);
+<span class="keyword">end</span>
+
+subplot(1,2,1); plot(rs,PSNRCbs); title(<span class="string">'PSNR of output C_b vs r'</span>);
+xlabel(<span class="string">'Window size r'</span>); ylabel(<span class="string">'Peak signal-to-noise ratio'</span>);
+subplot(1,2,2); plot(rs,PSNRCrs); title(<span class="string">'PSNR of output C_r vs r'</span>);
+xlabel(<span class="string">'Window size r'</span>); ylabel(<span class="string">'Peak signal-to-noise ratio'</span>);
+</pre><img vspace="5" hspace="5" src="main_11.png" alt=""> <p>This measurement is set up similarly to the measurement of regularization, but instead regularization is fixed to 0.5 and window size is varied. Unlike the paper, both chromatic components decrease in PSNR as r increases. In the paper, PSNR of the Cb component increases in the shape of a log function and the PSNR of the Cr component decreases linearly. In the plot above both Cb and Cr decrease in a linear trend, but the result seems to alternate between two decreasing linear functions Below shows the same plot with odd and even window sizes separated. which results in near linear decrease for both.</p><pre class="codeinput">rs = 1:2:19;
+n = length(rs);
+PSNRs = zeros(1, n);
+PSNRIs = zeros(1, n); PSNRCbs = zeros(1, n); PSNRCrs = zeros(1, n);
+RMSEIs = zeros(1, n); RMSECbs = zeros(1, n); RMSECrs = zeros(1, n);
+<span class="keyword">for</span> i=1:n
+    [PSNRs(i), PSNRIs(i), PSNRCrs(i), PSNRCbs(i), RMSEIs(i), RMSECbs(i),<span class="keyword">...</span>
+        RMSECrs(i)] = tuneSolution(<span class="string">'blakeyed.ppm'</span>, 3, rs(i), 0.5);
+<span class="keyword">end</span>
+
+subplot(2,2,1); plot(rs,PSNRCbs); title(<span class="string">'PSNR of output C_b vs odd r'</span>);
+xlabel(<span class="string">'Window size r'</span>); ylabel(<span class="string">'Peak signal-to-noise ratio'</span>);
+subplot(2,2,2); plot(rs,PSNRCrs); title(<span class="string">'PSNR of output C_r vs odd r'</span>);
+xlabel(<span class="string">'Window size r'</span>); ylabel(<span class="string">'Peak signal-to-noise ratio'</span>);
+
+rs = 2:2:20;
+<span class="keyword">for</span> i=1:n
+    [PSNRs(i), PSNRIs(i), PSNRCrs(i), PSNRCbs(i), RMSEIs(i), RMSECbs(i),<span class="keyword">...</span>
+        RMSECrs(i)] = tuneSolution(<span class="string">'blakeyed.ppm'</span>, 3, rs(i), 0.5);
+<span class="keyword">end</span>
+
+subplot(2,2,3); plot(rs,PSNRCbs); title(<span class="string">'PSNR of output C_b vs even r'</span>);
+xlabel(<span class="string">'Window size r'</span>); ylabel(<span class="string">'Peak signal-to-noise ratio'</span>);
+subplot(2,2,4); plot(rs,PSNRCrs); title(<span class="string">'PSNR of output C_r vs even r'</span>);
+xlabel(<span class="string">'Window size r'</span>); ylabel(<span class="string">'Peak signal-to-noise ratio'</span>);
+</pre><img vspace="5" hspace="5" src="main_12.png" alt=""> <p>Overall the solution seemed to behave as intended by the paper author, but there seems to be a dependence on the super-resolution technique used on the luminance component as the results obtained seem to diverge from the paper in certain situations, such as the PSNR of the Cb component when r varies. It would also help if the author explicitly defined the parameter r and provided direct links to the test images used to reduce guess-work and hurdles in reproducing the results.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Super-Resolution of Single Multi-Color Image with Guided Filter
+% By: Abdallah Arar
+%
+% Link to research paper:
+% <https://www.sciencedirect.com/science/article/pii/S1047320318303195>
+
+%% Problem Formulation
+% Super-resolution algorithms and techniques for monochrome images are 
+% being developed rapidly but such for multi-color images are still being
+% explored. 
+% 
+% Simply upscaling the chromatic channels of the image using
+% interpolation leads to degradation in image quality, which may have an 
+% effect on other algorithms that depend on super-resolution. 
+
+%% Proposed Solution
+% This solution attempts to alleviate degradation in image quality by 
+% using a super-resolution algorithm on the
+% luminance channel and then using it as a guide image for guided filtering
+% of the upscaled chromatic channels. As seen in the block diagram below, 
+% the image is represented in the $Y C_b C_r$ color space, and
+% the chromatic channels, $C_b$ and $C_r$, are scaled up using bicubic
+% interpolation and the luminance channel, $Y$, is scaled up using some 
+% super-resolution algorithm. Both upscaled chromatic channels are then 
+% filtered using a guided filter with the upscaled $Y$ as the guide, and 
+% then the said filtered chromatic components along with the upscaled $Y$
+% are then converted back into an RGB image.
+%
+% <<block_diagram.jpg>>
+
+%% Data Source
+% For the purposes of illustrating the solution, the standard image of Lena
+% named |lena_std.tif| obtained from <http://www.lenna.org/> will be used.
+imshow('lena_std.tif')
+
+%% Solution
+
+%% 
+% Parameter set-up
+image = 'lena_std.tif';
+factor = 2;
+r = 2;
+e = 0.01;
+%% 
+% Import images(s) and normalize them to be in the range of [0,1]
+ref = imread(image);
+ref = double(ref)/256;
+
+
+%%
+% Downscale the reference image to be used as the input
+A = imresize(ref, 1 / factor, 'bicubic');
+
+%%
+% Convert the input image from RGB to YCbCr color space
+R = A(:, :, 1); G = A(:, :, 2); B = A(:, :, 3);
+Y = 0.299 * R + 0.587 * G + 0.114 * B;
+C_b = 0.564 * (B - Y);
+C_r = 0.713 * (R - Y);
+
+subplot(1, 3, 1); imshow(Y); title('Y');
+subplot(1, 3, 2); imshow(C_b); title('C_b');
+subplot(1, 3, 3); imshow(C_r); title('C_r');
+
+%%
+% Upscale the chromatic components using bicubic interpolation
+s1 = size(ref); s2 = size(A);
+factor = s1(1)/s2(1);
+C_bbc = imresize(C_b, factor, 'bicubic');
+C_rbc = imresize(C_r, factor, 'bicubic');
+
+subplot(1, 2, 1); imshow(C_bbc); title('Bi-cubic interpolated C_b');
+subplot(1, 2, 2); imshow(C_rbc); title('Bi-cubic interpolated C_r');
+
+%%
+% Use a super-resolution technique to upscale the luminance component
+Y_sr = imresize(Y, factor, 'bicubic');
+
+subplot(1, 1, 1); imshowpair(Y, Y_sr, 'montage');
+title('Y before and after super-resolution');
+
+%%
+% Filter the chromatic components using a guided filter with |Y_sr| as the
+% guide
+Y_o = Y_sr;
+C_bo = imguidedfilter(C_bbc, Y_sr, 'NeighborhoodSize', r, ...
+    'DegreeOfSmoothing', e);
+C_ro = imguidedfilter(C_rbc, Y_sr, 'NeighborhoodSize', r, ...
+    'DegreeOfSmoothing', e);
+
+subplot(2, 2, 1); imshow(C_bbc); title('C_b before guided filtering');
+subplot(2, 2, 2); imshow(C_rbc); title('C_r before guided filtering');
+subplot(2, 2, 3); imshow(C_bo); title('C_b after guided filtering');
+subplot(2, 2, 4); imshow(C_ro); title('C_r after guided filtering');
+
+%% 
+% Convert the output from YCbCr to RGB color space 
+s = size(Y_o);
+A_o = zeros(s(1), s(2), 3);
+
+A_o(:, :, 1) = Y_o + 1.302 * C_ro;
+A_o(:, :, 2) = Y_o - 0.344 * C_bo - 0.712 * C_ro; 
+A_o(:, :, 3) = Y_o + 1.772 * C_bo;
+
+%% Visualization of Results
+% Display the downsampled input and super-resolutioned output images
+subplot(1,1,1); imshowpair(A, A_o, 'montage')
+
+%% Analysis and Conclusions
+% The solution has been modified to allow for easier analysis by making it
+% into a function which accepts the parameters as the input and PSQR and 
+% RMSE as the output and can be found in |tuneSolution.m|
+%
+% To avoid unneeded complexity, only bi-cubic interpolation will be used as
+% the super-resolution technique for the guided image
+
+%% 
+% Effect of image on peak signal-to-noise ratio and root-mean-square error
+images = {'lena_std.tif', 'beeflowr.ppm', 'blakeyed.ppm'};
+n = length(images);
+PSNRs = zeros(1, n); 
+PSNRIs = zeros(1, n); PSNRCbs = zeros(1, n); PSNRCrs = zeros(1, n);
+RMSEIs = zeros(1, n); RMSECbs = zeros(1, n); RMSECrs = zeros(1, n);
+for i=1:n
+    [PSNRs(i), PSNRIs(i), PSNRCrs(i), PSNRCbs(i), RMSEIs(i), RMSECbs(i),...
+        RMSECrs(i)] = tuneSolution(images{i}, 3, 2, 0.01);
+end
+
+subplot(2,2,1); bar(PSNRCbs); title('PSNR of C_b for each image'); 
+ylabel('Peak signal-to-noise ratio'); set(gca,'xticklabel',images)
+subplot(2,2,2); bar(PSNRCrs); title('PSNR of C_r for each image'); 
+ylabel('Peak signal-to-noise ratio'); set(gca,'xticklabel',images)
+subplot(2,2,3); bar(RMSECbs); title('RMSE of C_b for each image'); 
+ylabel('Root-mean-square error'); set(gca,'xticklabel',images)
+subplot(2,2,4); bar(RMSECrs); title('RMSE of C_r for each image'); 
+ylabel('Root-mean-square error'); set(gca,'xticklabel',images)
+
+%% 
+% Varying the image does not seem to affect PSNR by much relative to the
+% value of the respective PSNRs, but it seems to result in a greater
+% relative effect on the RMSE.
+%
+% Effect of factor on root-mean-square error
+factors = 1:10;
+n = length(factors);
+PSNRs = zeros(1, n); 
+PSNRIs = zeros(1, n); PSNRCbs = zeros(1, n); PSNRCrs = zeros(1, n);
+RMSEIs = zeros(1, n); RMSECbs = zeros(1, n); RMSECrs = zeros(1, n);
+for i=1:n
+    [PSNRs(i), PSNRIs(i), PSNRCrs(i), PSNRCbs(i), RMSEIs(i), RMSECbs(i),...
+        RMSECrs(i)] = tuneSolution('blakeyed.ppm', factors(i), 2, 0.01);
+end
+
+subplot(1,3,1); plot(factors,RMSEIs); title('RMSE of I vs factor'); 
+xlabel('Magnification factor'); ylabel('Root-mean-square error');
+subplot(1,3,2); plot(factors,RMSECbs); title('RMSE of output C_b vs factor');
+xlabel('Magnification factor'); ylabel('Root-mean-square error');
+subplot(1,3,3); plot(factors,RMSECrs); title('RMSE of output C_r vs factor');
+xlabel('Magnification factor'); ylabel('Root-mean-square error');
+
+%%
+% The increase of factor leads to the general increase of root-mean-square
+% error, with the exception of powers of 2 which seem to be omitted by
+% the author of the paper. By plotting only odd numbers we obtain the
+% following.
+
+factors = 1:2:25;
+n = length(factors);
+PSNRs = zeros(1, n); 
+PSNRIs = zeros(1, n); PSNRCbs = zeros(1, n); PSNRCrs = zeros(1, n);
+RMSEIs = zeros(1, n); RMSECbs = zeros(1, n); RMSECrs = zeros(1, n);
+for i=1:n
+    [PSNRs(i), PSNRIs(i), PSNRCrs(i), PSNRCbs(i), RMSEIs(i), RMSECbs(i),...
+        RMSECrs(i)] = tuneSolution(images{2}, factors(i), 2, 0.01);
+end
+
+subplot(1,3,1); plot(factors,RMSEIs); title('RMSE of I vs factor'); 
+xlabel('Magnification factor'); ylabel('Root-mean-square error');
+subplot(1,3,2); plot(factors,RMSECbs); title('RMSE of output C_b vs factor');
+xlabel('Magnification factor'); ylabel('Root-mean-square error');
+subplot(1,3,3); plot(factors,RMSECrs); title('RMSE of output C_r vs factor');
+xlabel('Magnification factor'); ylabel('Root-mean-square error');
+
+%%
+% It appears to show a near linear increase in RMSE with an offset at
+% certain values such as 9 and 19
+%
+% Effect of the regularization parameter $\epsilon$
+es = linspace(0.01,1,100);
+n = length(es);
+PSNRs = zeros(1, n); 
+PSNRIs = zeros(1, n); PSNRCbs = zeros(1, n); PSNRCrs = zeros(1, n);
+RMSEIs = zeros(1, n); RMSECbs = zeros(1, n); RMSECrs = zeros(1, n);
+for i=1:n
+    [PSNRs(i), PSNRIs(i), PSNRCrs(i), PSNRCbs(i), RMSEIs(i), RMSECbs(i),...
+        RMSECrs(i)] = tuneSolution('blakeyed.ppm', 3, 2, es(i));
+end
+
+subplot(1,2,1); plot(es,PSNRCbs); title('PSNR of output C_b vs \epsilon');
+xlabel('Regularization parameter\epsilon'); ylabel('Peak signal-to-noise ratio');
+subplot(1,2,2); plot(es,PSNRCrs); title('PSNR of output C_r vs \epsilon');
+xlabel('Regularization parameter\epsilon'); ylabel('Peak signal-to-noise ratio');
+%%
+% Like the paper, the magnification factor is fixed to 3, the 
+% window size is fixed to 3 and the image used is Blakeyed; the only
+% deviation from the paper is guided image. Bi-cubic interpolation is used
+% instead of the result of Zeyde et al. As seen in the plots above, the
+% PSNR of the output Cb and Cr components decreases as regularization
+% increases, which is similar to the results of the paper, but unlike the
+% paper which shows a linear decrease, the plots above show a pattern more
+% akin to the inverse function.
+%
+% Effect of window size r
+rs = 1:20;
+n = length(rs);
+PSNRs = zeros(1, n); 
+PSNRIs = zeros(1, n); PSNRCbs = zeros(1, n); PSNRCrs = zeros(1, n);
+RMSEIs = zeros(1, n); RMSECbs = zeros(1, n); RMSECrs = zeros(1, n);
+for i=1:n
+    [PSNRs(i), PSNRIs(i), PSNRCrs(i), PSNRCbs(i), RMSEIs(i), RMSECbs(i),...
+        RMSECrs(i)] = tuneSolution('blakeyed.ppm', 3, rs(i), 0.5);
+end
+
+subplot(1,2,1); plot(rs,PSNRCbs); title('PSNR of output C_b vs r');
+xlabel('Window size r'); ylabel('Peak signal-to-noise ratio');
+subplot(1,2,2); plot(rs,PSNRCrs); title('PSNR of output C_r vs r');
+xlabel('Window size r'); ylabel('Peak signal-to-noise ratio');
+%%
+% This measurement is set up similarly to the measurement of 
+% regularization, but instead regularization is fixed to 0.5 and window 
+% size is varied. Unlike the paper, both chromatic components decrease in
+% PSNR as r increases. In the paper, PSNR of the Cb component increases in 
+% the shape of a log function and the PSNR of the Cr component decreases
+% linearly. In the plot above both Cb and Cr decrease in a linear trend,
+% but the result seems to alternate between two decreasing linear functions
+% Below shows the same plot with odd and even window sizes separated. which
+% results in near linear decrease for both.
+rs = 1:2:19;
+n = length(rs);
+PSNRs = zeros(1, n); 
+PSNRIs = zeros(1, n); PSNRCbs = zeros(1, n); PSNRCrs = zeros(1, n);
+RMSEIs = zeros(1, n); RMSECbs = zeros(1, n); RMSECrs = zeros(1, n);
+for i=1:n
+    [PSNRs(i), PSNRIs(i), PSNRCrs(i), PSNRCbs(i), RMSEIs(i), RMSECbs(i),...
+        RMSECrs(i)] = tuneSolution('blakeyed.ppm', 3, rs(i), 0.5);
+end
+
+subplot(2,2,1); plot(rs,PSNRCbs); title('PSNR of output C_b vs odd r');
+xlabel('Window size r'); ylabel('Peak signal-to-noise ratio');
+subplot(2,2,2); plot(rs,PSNRCrs); title('PSNR of output C_r vs odd r');
+xlabel('Window size r'); ylabel('Peak signal-to-noise ratio');
+
+rs = 2:2:20;
+for i=1:n
+    [PSNRs(i), PSNRIs(i), PSNRCrs(i), PSNRCbs(i), RMSEIs(i), RMSECbs(i),...
+        RMSECrs(i)] = tuneSolution('blakeyed.ppm', 3, rs(i), 0.5);
+end
+
+subplot(2,2,3); plot(rs,PSNRCbs); title('PSNR of output C_b vs even r');
+xlabel('Window size r'); ylabel('Peak signal-to-noise ratio');
+subplot(2,2,4); plot(rs,PSNRCrs); title('PSNR of output C_r vs even r');
+xlabel('Window size r'); ylabel('Peak signal-to-noise ratio');
+
+%%
+% Overall the solution seemed to behave as intended by the paper author,
+% but there seems to be a dependence on the super-resolution technique
+% used on the luminance component as the results obtained seem to
+% diverge from the paper in certain situations, such as the PSNR of the Cb
+% component when r varies. It would also help if the author explicitly
+% defined the parameter r and provided direct links to the test images used
+% to reduce guess-work and hurdles in reproducing the results.
+##### SOURCE END #####
+--></body></html>
